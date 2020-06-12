@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.onlineshop.dao.OrderMapper">
+    <resultMap id="OrderItemCategory" type="com.onlineshop.po.Order_item">
+        <id property="orderitem_id" column="orderitem_id" />
+        <result property="order_id" column="order_id" />
+        <result property="ci_id" column="ci_id" />
+        <result property="buynum" column="buynum" />
+        <result property="totalprice" column="totalprice" />
+        <result property="commentstate" column="commentstate" />
+        <association property="category_item" javaType="com.onlineshop.po.Category_item">
+            <id column="id" property="id"/>
+            <result column="cid" property="cid"/>
+            <result column="cname" property="cname"/>
+            <result column="csize" property="csize"/>
+            <result column="ccolor" property="ccolor"/>
+            <result column="ccount" property="ccount"/>
+            <result column="cprice" property="cprice"/>
+            <result column="cimg" property="cimg"/>
+        </association>
+    </resultMap>
+    <resultMap id="CommentCategory" type="com.onlineshop.po.Comment">
+        <id property="co_id" column="co_id" />
+        <result property="oi_id" column="oi_id" />
+        <result property="ci_username" column="ci_username" />
+        <result property="co_level" column="co_level" />
+        <result property="co_content" column="co_content" />
+        <result property="co_createtime" column="co_createtime" />
+        <association property="order_item" javaType="com.onlineshop.po.Order_item">
+            <id property="orderitem_id" column="orderitem_id" />
+            <result property="ci_id" column="ci_id" />
+            <result property="commentstate" column="commentstate" />
+            <association property="category_item" javaType="com.onlineshop.po.Category_item">
+                <id column="id" property="id"/>
+                <result column="cid" property="cid"/>
+                <result column="cname" property="cname"/>
+                <result column="csize" property="csize"/>
+                <result column="ccolor" property="ccolor"/>
+            </association>
+        </association>
+</resultMap>
+
+    <resultMap id="OrderUserCategory" type="com.onlineshop.po.Order">
+        <id property="id" column="id" />
+        <result property="order_id" column="order_id" />
+        <result property="user_id" column="user_id" />
+        <result property="price" column="price" />
+        <result property="createtime" column="createtime" />
+        <result property="paystate" column="paystate" />
+        <result property="deliverstate" column="deliverstate" />
+        <result property="arrivestate" column="arrivestate" />
+        <association property="user" javaType="com.onlineshop.po.User">
+            <id column="id" property="id"/>
+            <result column="username" property="username"/>
+        </association>
+    </resultMap>
+    <insert id="insertOrder" parameterType="com.onlineshop.po.Order">
+        <selectKey keyColumn="id" keyProperty="id" order="AFTER" resultType="int">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO `order`
+        (order_id,user_id,price,receiverAddress,receiverName,receiverPhone,createtime,paystate,deliverstate,arrivestate) VALUES (#{order_id},#{user_id},#{price},#{receiverAddress},#{receiverName},#{receiverPhone},NOW(),#{paystate},#{deliverstate},#{arrivestate})
+    </insert>
+    <insert id="insertOrderItem" parameterType="com.onlineshop.po.Order_item">
+        <selectKey keyColumn="orderitem_id" keyProperty="orderitem_id" order="AFTER" resultType="int">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        insert into `order_item`
+        (order_id,ci_id,buynum,totalprice,commentstate) values (#{order_id},#{ci_id},#{buynum},#{totalprice},#{commentstate})
+    </insert>
+    <update id="UpdatePayState" parameterType="com.onlineshop.po.Order">
+        UPDATE `order` set paystate = #{paystate} where order_id = #{order_id}
+    </update>
+    <update id="UpdateDeliverState" parameterType="com.onlineshop.po.Order">
+        UPDATE `order` set deliverstate = #{deliverstate} where order_id = #{order_id}
+    </update>
+    <update id="UpdateArriveState" parameterType="com.onlineshop.po.Order">
+        UPDATE `order` set arrivestate = #{arrivestate} where order_id = #{order_id}
+    </update>
+    <update id="UpdateCommentState" parameterType="com.onlineshop.po.Order_item">
+        UPDATE `order_item` set commentstate = #{commentstate} where orderitem_id = #{orderitem_id}
+    </update>
+    <select id="DisOrderById" parameterType="com.onlineshop.po.Pageresult" resultType="com.onlineshop.po.Order">
+        select * from `order` where user_id = #{user_id} limit #{start},#{pageCount}
+    </select>
+    <select id="FindOrderByOrderId" parameterType="String" resultType="com.onlineshop.po.Order">
+        select * from `order` where order_id = #{order_id}
+    </select>
+    <select id="CountOrderById" parameterType="int" resultType="int">
+        select count(*) from `order` where user_id = #{user_id}
+    </select>
+    <select id="DisOrderItemById" parameterType="com.onlineshop.po.Pageresult" resultMap="OrderItemCategory">
+        select * from `order_item` oi left join category_item ci on oi.ci_id = ci.id where oi.order_id = #{order_id} limit #{start},#{pageCount}
+    </select>
+    <select id="CountOrderItemById" parameterType="String" resultType="int">
+        select count(*) from `order` where order_id = #{order_id}
+    </select>
+    <!--评论-->
+    <insert id="AddComment" parameterType="com.onlineshop.po.Comment">
+        <selectKey keyColumn="co_id" keyProperty="co_id" order="AFTER" resultType="int">
+           SELECT LAST_INSERT_ID()
+        </selectKey>
+        insert into `comment`
+        (oi_id,ci_username,co_level,co_content,co_createtime) values (#{oi_id},#{ci_username},#{co_level},#{co_content},NOW())
+    </insert>
+    <select id="DisCommentByCid" parameterType="com.onlineshop.po.Pageresult" resultMap="CommentCategory">
+        select * from `comment` c join `order_item` oi on c.oi_id = oi.orderitem_id
+        left join `category_item` ci on oi.ci_id = ci.id where ci.cid = #{cid} limit #{start},#{pageCount}
+    </select>
+    <select id="DisCommentByUname" parameterType="com.onlineshop.po.Pageresult" resultMap="CommentCategory">
+        select * from `comment` c join `order_item` oi on c.oi_id = oi.orderitem_id
+        left join `category_item` ci on oi.ci_id = ci.id where ci_username = #{username} limit #{start},#{pageCount}
+    </select>
+    <select id="CountCommentByUname" parameterType="String" resultType="int">
+        select count(*) from `comment` c join `order_item` oi on c.oi_id = oi.orderitem_id
+        left join `category_item` ci on oi.ci_id = ci.id where ci_username = #{ci_username}
+    </select>
+    <select id="CountCommentByCid" parameterType="int" resultType="int">
+        select count(*) from `comment` c join `order_item` oi on c.oi_id = oi.orderitem_id
+        left join `category_item` ci on oi.ci_id = ci.id where ci.cid = #{cid}
+    </select>
+    <select id="CountCommentByCidLevel" parameterType="com.onlineshop.po.Comment" resultType="int">
+        select count(*) from `comment` c join `order_item` oi on c.oi_id = oi.orderitem_id
+        left join `category_item` ci on oi.ci_id = ci.id where ci.cid = #{cid} and c.co_level = #{co_level}
+    </select>
+    <delete id="DeleteCommentById" parameterType="int">
+        Delete from comment where co_id = #{co_id}
+    </delete>
+    <delete id="DeleteOrder" parameterType="String">
+        Delete from `order` where order_id = #{order_id}
+    </delete>
+    <delete id="DeleteOrderItem" parameterType="String">
+        Delete from order_item where order_id = #{order_id}
+    </delete>
+    <!--管理端订单-->
+    <select id="DisAllOrder" parameterType="com.onlineshop.po.Pageresult" resultMap="OrderUserCategory">
+        select * from `order` o left join `user` u on o.user_id = u.id limit #{start},#{pageCount}
+    </select>
+    <select id="CountAllOrder" parameterType="int" resultType="int">
+        select count(*) from `order`
+    </select>
+    <select id="DisSearchOrder" parameterType="com.onlineshop.po.Pageresult" resultMap="OrderUserCategory">
+        select * from `order` o left join `user` u on o.user_id = u.id  where o.order_id like concat('%',#{order_id},'%') limit #{start},#{pageCount}
+    </select>
+    <select id="CountSearchOrder" parameterType="String" resultType="int">
+        select count(*) from `order` where order_id like concat('%',#{order_id},'%')
+    </select>
+</mapper>

@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--注意：在mapper代理时，它具有特殊及重要的作用-->
+<!-- namespace：命名空间，用于隔离sql -->
+<!-- 还有一个很重要的作用，使用动态代理开发DAO，1. namespace必须和Mapper接口类路径一致 -->
+<mapper namespace="com.onlineshop.dao.CategoryMapper">
+    <resultMap type="com.onlineshop.po.Cart" id="CartResultMap">
+        <id property="cary_id" column="cary_id" />
+        <result property="user_id" column="user_id" />
+        <result property="ci_id" column="ci_id" />
+        <result property="ci_num" column="ci_num" />
+        <result property="ci_price" column="ci_price" />
+        <association property="category_item" javaType="com.onlineshop.po.Category_item">
+            <id column="id" property="id"/>
+            <result column="cid" property="cid"/>
+            <result column="cname" property="cname"/>
+            <result column="csize" property="csize"/>
+            <result column="ccolor" property="ccolor"/>
+            <result column="ccount" property="ccount"/>
+            <result column="cprice" property="cprice"/>
+            <result column="cimg" property="cimg"/>
+        </association>
+    </resultMap>
+
+    <resultMap id="CategoryResultMap" type="com.onlineshop.po.Category_item">
+        <id column="id" property="id"/>
+        <result column="cid" property="cid"/>
+        <result column="cname" property="cname"/>
+        <result column="csize" property="csize"/>
+        <result column="ccolor" property="ccolor"/>
+        <result column="ccount" property="ccount"/>
+        <result column="cprice" property="cprice"/>
+        <result column="cimg" property="cimg"/>
+        <association property="category" javaType="com.onlineshop.po.Category">
+            <id property="id" column="id" />
+            <result property="cname" column="cname" />
+            <result property="ctype" column="ctype" />
+            <result property="cdiscount" column="cdiscount" />
+            <result property="introduce" column="introduce" />
+            <result property="cpricel" column="cpricel" />
+            <result property="cpricem" column="cpricem" />
+            <result property="issale" column="issale"/>
+            <result property="img" column="img" />
+        </association>
+    </resultMap>
+    <!--商品列表分页-->
+    <select id="DisCategoryByCtype" parameterType="com.onlineshop.po.Pageresult" resultType="com.onlineshop.po.Category">
+        select * from category where ctype = #{ctype} and issale = 1 limit #{start},#{pageCount}
+    </select>
+    <select id="DisCategoryByCtypeD" parameterType="com.onlineshop.po.Pageresult" resultType="com.onlineshop.po.Category">
+        select * from category where ctype = #{ctype} and issale = 1
+         ORDER BY cpricel DESC limit #{start},#{pageCount}
+    </select>
+    <select id="DisCategoryByCtypeA" parameterType="com.onlineshop.po.Pageresult" resultType="com.onlineshop.po.Category">
+        select * from category where ctype = #{ctype} and issale = 1 ORDER BY cpricel ASC limit #{start},#{pageCount}
+    </select>
+    <select id="CountCategoryByCtype" parameterType="String" resultType="int">
+        select count(*) from category  where ctype = #{ctype} and issale = 1
+    </select>
+    <!--商品指定-->
+    <select id="DisCategoryById" parameterType="int" resultType="com.onlineshop.po.Category">
+       select * from category where id = #{id} and issale = 1;
+    </select>
+    <select id="DisCategoryByIdO" parameterType="int" resultType="com.onlineshop.po.Category">
+       select * from category where id = #{id};
+    </select>
+    <select id="DisCategoryByNT" parameterType="com.onlineshop.po.Category" resultType="com.onlineshop.po.Category">
+        select * from category where cname = #{cname} and ctype = #{ctype};
+    </select>
+    <update id="UpdateCategoryImg" parameterType="com.onlineshop.po.Category">
+        UPDATE category set img = #{img} where id = #{id};
+    </update>
+    <update id="UpdateCategorySale" parameterType="com.onlineshop.po.Category">
+        UPDATE category set issale = #{issale} where id = #{id};
+    </update>
+    <update id="UpdateCategory" parameterType="com.onlineshop.po.Category">
+        UPDATE category set cname = #{cname},ctype = #{ctype},cdiscount = #{cdiscount},introduce = #{introduce},cpricel = #{cpricel},cpricem = #{cpricem} where id = #{id};
+    </update>
+    <update id="UpdateCategory_Item" parameterType="com.onlineshop.po.Category_item">
+        UPDATE category_item set cname = #{cname},csize = #{csize},ccolor = #{ccolor},cprice = #{cprice},ccount = #{ccount} where id = #{id};
+    </update>
+    <update id="UpdateCategory_ItemImg" parameterType="com.onlineshop.po.Category_item">
+        UPDATE category_item set cimg = #{cimg} where id = #{id};
+    </update>
+    <!--商品详情-->
+    <select id="IsSaleCategory" parameterType="int" resultType="int">
+    select count(*) from category where id = #{id} and issale = 1;
+    </select>
+    <select id="IsExistCategory" parameterType="com.onlineshop.po.Category" resultType="int">
+    select count(*) from category where cname = #{cname} and ctype = #{ctype};
+    </select>
+    <select id="IsExistCategory_Item" parameterType="com.onlineshop.po.Category_item" resultType="int">
+    select count(*) from category_item where cname = #{cname} and csize = #{csize} and ccolor = #{ccolor};
+    </select>
+    <insert id="insertCategory" parameterType="com.onlineshop.po.Category">
+        <selectKey keyColumn="id" keyProperty="id" order="AFTER" resultType="int">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        insert into category (cname,ctype,cpricel,cpricem,cdiscount,introduce,img,issale) values (#{cname},#{ctype},#{cpricel},#{cpricem},#{cdiscount},#{introduce},#{img},#{issale})
+    </insert>
+    <insert id="insertCategory_Item" parameterType="com.onlineshop.po.Category_item">
+        <selectKey keyColumn="id" keyProperty="id" order="AFTER" resultType="int">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        insert into category_item (cid,cname,csize,ccolor,ccount,cprice,cimg) values (#{cid},#{cname},#{csize},#{ccolor},#{ccount},#{cprice},#{cimg})
+    </insert>
+    <select id="DisCategoryItemById" parameterType="int" resultType="com.onlineshop.po.Category_item">
+        select * from category_item where cid = #{cid} group by csize;
+    </select>
+    <select id="FindCategoryItemById" parameterType="int" resultType="com.onlineshop.po.Category_item">
+        select * from category_item where id = #{id};
+    </select>
+    <select id="DisCategoryColorById" parameterType="int" resultType="com.onlineshop.po.Category_item">
+        select * from category_item where cid = #{cid} group by ccolor;
+    </select>
+    <delete id="DeleteCategory" parameterType="int">
+        DELETE from category where id = #{id};
+    </delete>
+    <delete id="DeleteCategory_Item" parameterType="int">
+        DELETE from category_item where id = #{id};
+    </delete>
+    <select id="CountCategory_Item" parameterType="int" resultType="int">
+        select count(*) from category_item where cid = #{cid};
+    </select>
+    <!--通过内存和颜色找商品详情-->
+    <select id="findCategoryBySC" parameterType="com.onlineshop.po.Category_item" resultType="com.onlineshop.po.Category_item">
+        select * from category_item where csize = #{csize} and ccolor = #{ccolor};
+    </select>
+    <select id="CountCategoryBySC" parameterType="com.onlineshop.po.Category_item" resultType="int">
+        select count(*) from category_item where csize = #{csize} and ccolor = #{ccolor};
+    </select>
+    <!--购物车-->
+    <!--添加进购物车-->
+    <insert id="addCart" parameterType="com.onlineshop.po.Cart">
+        <selectKey keyColumn="cart_id" keyProperty="cart_id" order="AFTER" resultType="int">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        INSERT INTO `cart`
+        (user_id,ci_id,ci_num,ci_price) VALUES (#{user_id},#{ci_id},#{ci_num},#{ci_price})
+    </insert>
+    <select id="disCartByUserId" parameterType="int" resultMap="CartResultMap">
+        select * from cart c left join category_item ci on c.ci_id = ci.id where c.user_id = #{user_id};
+    </select>
+    <select id="CountCartById" parameterType="com.onlineshop.po.Cart" resultType="int">
+        select count(*) from cart where user_id = #{user_id} and ci_id = #{ci_id};
+    </select>
+    <select id="findCartById" parameterType="com.onlineshop.po.Cart" resultMap="CartResultMap">
+        select * from cart c left join category_item ci on c.ci_id = ci.id where c.user_id = #{user_id} and c.ci_id = #{ci_id};
+    </select>
+    <select id="UpdateCartById" parameterType="com.onlineshop.po.Cart">
+        update `cart` set ci_num = #{ci_num} where user_id = #{user_id} and ci_id = #{ci_id};
+    </select>
+    <delete id="DeleteCartById" parameterType="com.onlineshop.po.Cart">
+        delete from cart where user_id = #{user_id} and ci_id = #{ci_id};
+    </delete>
+    <update id="UpdateCcount" parameterType="com.onlineshop.po.Category_item">
+        UPDATE category_item SET ccount = ccount + #{ccount} WHERE id = #{id}
+    </update>
+    <!--管理端全部商品-->
+    <select id="DisAllCategory" parameterType="com.onlineshop.po.Pageresult" resultMap="CategoryResultMap">
+        select * from category_item ci left join category c on c.id = ci.cid limit #{start},#{pageCount}
+    </select>
+    <select id="CountAllCategory" resultType="int">
+        select count(*) from category_item ci left join category c on c.id = ci.cid
+    </select>
+    <select id="DisSearchCategory" parameterType="com.onlineshop.po.Pageresult" resultMap="CategoryResultMap">
+        select * from category_item ci left join category c on c.id = ci.cid where c.cname like concat('%',#{cname},'%') limit #{start},#{pageCount}
+    </select>
+    <select id="CountSearchCategory" parameterType="String" resultType="int">
+        select count(*) from category_item ci left join category c on c.id = ci.cid where c.cname like concat('%',#{cname},'%')
+    </select>
+</mapper>
